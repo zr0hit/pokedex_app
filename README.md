@@ -14,6 +14,17 @@ Here is the mobile application running beautifully in a native environment:
   <img src="screenshots/favorites.jpg" width="19%" />
 </p>
 
+## 💻 Desktop Web Previews
+Here is the exact same codebase automatically adapting to a massive ultra-wide Desktop layout natively in the browser:
+
+<p align="center">
+  <img src="screenshots/web_arceus.png" width="49%" />
+  <img src="screenshots/web_palkia.png" width="49%" />
+  <img src="screenshots/web_search.png" width="49%" />
+  <img src="screenshots/web_favorites.png" width="49%" />
+</p>
+
+
 ## 📱 Find the Apps (Mobile vs Web)
 Because this app is built with Flutter, the entire application is powered by a **single shared codebase** located in the lib/ directory. However, you can easily build or explore the specific platforms:
 
