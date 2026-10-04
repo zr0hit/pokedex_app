@@ -2,6 +2,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/pokemon.dart';
 import '../services/api_service.dart';
+import '../data/pokemon_data.dart';
 
 class PokemonProvider with ChangeNotifier {
   final SharedPreferences _prefs;
@@ -52,6 +53,16 @@ class PokemonProvider with ChangeNotifier {
     
     if (type == 'All') {
       _filteredTypeNames.clear();
+      await loadPokemonList();
+    } else if (type == 'Legendary') {
+      _isLoading = true;
+      notifyListeners();
+      _filteredTypeNames = legendaryPokemon;
+      await loadPokemonList();
+    } else if (type == 'Mythical') {
+      _isLoading = true;
+      notifyListeners();
+      _filteredTypeNames = mythicalPokemon;
       await loadPokemonList();
     } else {
       _isLoading = true;

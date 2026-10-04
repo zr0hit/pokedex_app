@@ -1,13 +1,14 @@
 ﻿import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/pokemon.dart';
+import '../data/pokemon_data.dart';
 
 void showTypeAnimation(BuildContext context, PokemonDetail pokemon, VoidCallback onComplete) {
   final overlay = Overlay.of(context);
   late OverlayEntry entry;
 
   entry = OverlayEntry(
-    builder: (context) => _TypeAnimationWidget(
+    builder: (context) => _AdvancedAnimationWidget(
       pokemon: pokemon,
       onComplete: () {
         entry.remove();
@@ -19,33 +20,40 @@ void showTypeAnimation(BuildContext context, PokemonDetail pokemon, VoidCallback
   overlay.insert(entry);
 }
 
-class _TypeAnimationWidget extends StatefulWidget {
+class _AdvancedAnimationWidget extends StatefulWidget {
   final PokemonDetail pokemon;
   final VoidCallback onComplete;
 
-  const _TypeAnimationWidget({required this.pokemon, required this.onComplete});
+  const _AdvancedAnimationWidget({required this.pokemon, required this.onComplete});
 
   @override
-  _TypeAnimationWidgetState createState() => _TypeAnimationWidgetState();
+  _AdvancedAnimationWidgetState createState() => _AdvancedAnimationWidgetState();
 }
 
-class _TypeAnimationWidgetState extends State<_TypeAnimationWidget> with SingleTickerProviderStateMixin {
+class _AdvancedAnimationWidgetState extends State<_AdvancedAnimationWidget> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   final Random _random = Random();
-  late List<_Particle> _particles;
+  bool isLegendary = false;
+  bool isMythical = false;
+  late String primaryType;
+  
+  late List<_Particle> _standardParticles;
 
   @override
   void initState() {
     super.initState();
+    isLegendary = legendaryPokemon.contains(widget.pokemon.name.toLowerCase());
+    isMythical = mythicalPokemon.contains(widget.pokemon.name.toLowerCase());
+    primaryType = widget.pokemon.types.isNotEmpty ? widget.pokemon.types.first.toLowerCase() : 'normal';
+
     _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
     
-    int totalStats = widget.pokemon.stats.values.fold(0, (sum, val) => sum + val);
-    int particleCount = (totalStats / 7).clamp(25, 120).toInt();
-
-    _particles = List.generate(particleCount, (index) {
-      String type = widget.pokemon.types[_random.nextInt(widget.pokemon.types.length)].toLowerCase();
-      return _createParticle(type);
-    });
+    // Only generate standard particles if we need them
+    if (!isLegendary && !isMythical && primaryType != 'electric' && primaryType != 'fire') {
+      int totalStats = widget.pokemon.stats.values.fold(0, (sum, val) => sum + val);
+      int particleCount = (totalStats / 7).clamp(30, 120).toInt();
+      _standardParticles = List.generate(particleCount, (index) => _createParticle(primaryType));
+    }
 
     _controller.forward().then((_) {
       widget.onComplete();
@@ -58,26 +66,6 @@ class _TypeAnimationWidgetState extends State<_TypeAnimationWidget> with SingleT
     double startX = 0.5, startY = 0.5, endX = 0.5, endY = 0.5;
     
     switch (type) {
-      case 'electric': 
-        icon = Icons.bolt; color = Colors.yellowAccent; 
-        startX = _random.nextDouble(); startY = -0.2;
-        endX = startX + (_random.nextDouble() - 0.5) * 0.3; endY = 1.2;
-        break;
-      case 'rock': case 'ground': case 'fighting':
-        icon = Icons.landscape; color = Colors.brown.shade400; 
-        startX = _random.nextDouble(); startY = -0.2;
-        endX = startX; endY = 1.2;
-        break;
-      case 'fire': 
-        icon = Icons.local_fire_department; color = Colors.orangeAccent; 
-        startX = _random.nextDouble(); startY = 1.2;
-        endX = startX + (_random.nextDouble() - 0.5) * 0.6; endY = -0.2;
-        break;
-      case 'flying': case 'dragon': 
-        icon = Icons.air; color = Colors.cyanAccent; 
-        startX = -0.2; startY = _random.nextDouble();
-        endX = 1.2; endY = startY + (_random.nextDouble() - 0.5) * 0.5;
-        break;
       case 'water': case 'ice': 
         icon = Icons.water_drop; color = Colors.blueAccent; 
         startX = _random.nextDouble(); startY = -0.2;
@@ -88,10 +76,20 @@ class _TypeAnimationWidgetState extends State<_TypeAnimationWidget> with SingleT
         startX = 1.2; startY = _random.nextDouble();
         endX = -0.2; endY = startY + (_random.nextDouble() - 0.5) * 0.7;
         break;
+      case 'rock': case 'ground': case 'fighting':
+        icon = Icons.landscape; color = Colors.brown.shade400; 
+        startX = _random.nextDouble(); startY = -0.2;
+        endX = startX; endY = 1.2;
+        break;
       case 'psychic': case 'ghost': case 'poison': 
         icon = Icons.blur_on; color = Colors.purpleAccent; 
         startX = _random.nextDouble(); startY = _random.nextDouble();
-        endX = startX + (_random.nextDouble() - 0.5) * 1.0; endY = startY + (_random.nextDouble() - 0.5) * 1.0;
+        endX = startX + (_random.nextDouble() - 0.5) * 1.2; endY = startY + (_random.nextDouble() - 0.5) * 1.2;
+        break;
+      case 'flying': case 'dragon': 
+        icon = Icons.air; color = Colors.cyanAccent; 
+        startX = -0.2; startY = _random.nextDouble();
+        endX = 1.2; endY = startY + (_random.nextDouble() - 0.5) * 0.5;
         break;
       default: 
         icon = Icons.star; color = Colors.pinkAccent; 
@@ -99,7 +97,6 @@ class _TypeAnimationWidgetState extends State<_TypeAnimationWidget> with SingleT
         endX = _random.nextDouble() * 1.5 - 0.25; endY = _random.nextDouble() * 1.5 - 0.25;
         break;
     }
-
     return _Particle(
       icon: icon, color: color,
       startX: startX, startY: startY, endX: endX, endY: endY,
@@ -120,61 +117,210 @@ class _TypeAnimationWidgetState extends State<_TypeAnimationWidget> with SingleT
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        double progress = _controller.value;
-        Color mainColor = _particles.isNotEmpty ? _particles.first.color : Colors.white;
-        double bgOpacity = sin(progress * pi) * 0.5; // Flash effect
+        if (isLegendary) return _buildLegendary();
+        if (isMythical) return _buildMythical();
+        
+        switch (primaryType) {
+          case 'electric': return _buildElectric();
+          case 'fire': return _buildFire();
+          default: return _buildStandard();
+        }
+      }
+    );
+  }
 
-        return IgnorePointer(
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: Container(color: mainColor.withOpacity(bgOpacity.clamp(0.0, 1.0))),
+  Widget _buildLegendary() {
+    double progress = _controller.value;
+    double scale = Curves.easeOutQuart.transform(progress) * 20;
+    double opacity = progress > 0.7 ? (1.0 - progress) * 3.33 : 1.0;
+    
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          // White flash
+          if (progress < 0.2)
+            Positioned.fill(child: Container(color: Colors.white.withOpacity(1.0 - (progress * 5)))),
+          // Golden Expanding Aura
+          Positioned.fill(
+            child: Opacity(
+              opacity: opacity.clamp(0.0, 1.0),
+              child: Center(
+                child: Transform.scale(
+                  scale: scale,
+                  child: Transform.rotate(
+                    angle: progress * pi,
+                    child: const Icon(Icons.wb_twilight, color: Colors.amberAccent, size: 100),
+                  ),
+                ),
               ),
-              ..._particles.map((p) {
-                double easeProgress;
-                if (p.icon == Icons.local_fire_department || p.icon == Icons.blur_on) {
-                   easeProgress = Curves.easeOutCubic.transform(progress);
-                } else if (p.icon == Icons.bolt || p.icon == Icons.landscape || p.icon == Icons.water_drop) {
-                   easeProgress = Curves.easeInQuint.transform(progress);
-                } else {
-                   easeProgress = Curves.easeOutQuad.transform(progress);
-                }
+            ),
+          ),
+          // Intense gold overlay
+          Positioned.fill(child: Container(color: Colors.amber.withOpacity(sin(progress * pi) * 0.5))),
+        ],
+      ),
+    );
+  }
 
-                double x = p.startX + (p.endX - p.startX) * easeProgress;
-                double y = p.startY + (p.endY - p.startY) * easeProgress;
-                double currentRotation = p.rotation + (p.rotationSpeed * progress);
-                double scale = sin(progress * pi) * 1.5 + 0.5; 
-                double opacity = progress > 0.8 ? (1.0 - progress) * 5 : 1.0;
+  Widget _buildMythical() {
+    double progress = _controller.value;
+    double scale = Curves.easeInOutCubic.transform(progress) * 15;
+    double opacity = progress > 0.8 ? (1.0 - progress) * 5 : 1.0;
+    
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          // Galaxy Purple background flash
+          Positioned.fill(child: Container(color: Colors.deepPurple.shade900.withOpacity(sin(progress * pi)))),
+          // Swirling stars
+          Positioned.fill(
+            child: Opacity(
+              opacity: opacity.clamp(0.0, 1.0),
+              child: Center(
+                child: Transform.scale(
+                  scale: scale,
+                  child: Transform.rotate(
+                    angle: -progress * 2 * pi,
+                    child: const Icon(Icons.flare, color: Colors.cyanAccent, size: 100),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: Opacity(
+              opacity: opacity.clamp(0.0, 1.0),
+              child: Center(
+                child: Transform.scale(
+                  scale: scale * 0.8,
+                  child: Transform.rotate(
+                    angle: progress * 3 * pi,
+                    child: const Icon(Icons.auto_awesome, color: Colors.pinkAccent, size: 80),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                return Positioned(
-                  left: x * MediaQuery.of(context).size.width,
-                  top: y * MediaQuery.of(context).size.height,
-                  child: Opacity(
-                    opacity: opacity.clamp(0.0, 1.0),
-                    child: Transform.translate(
-                      offset: Offset(-p.size/2, -p.size/2), // center align
-                      child: Transform.rotate(
-                        angle: currentRotation,
-                        child: Transform.scale(
-                          scale: scale,
-                          child: Icon(
-                             p.icon, 
-                             color: p.color, 
-                             size: p.size,
-                             shadows: [
-                               Shadow(blurRadius: 15.0, color: p.color.withOpacity(0.8), offset: const Offset(0, 0))
-                             ],
-                          ),
-                        ),
+  Widget _buildElectric() {
+    double progress = _controller.value;
+    bool isFlash = (progress * 20).toInt() % 2 == 0 && progress < 0.8;
+    double opacity = progress > 0.8 ? (1.0 - progress) * 5 : 1.0;
+
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          // Strobe Light
+          if (isFlash) Positioned.fill(child: Container(color: Colors.white)),
+          if (!isFlash) Positioned.fill(child: Container(color: Colors.yellowAccent.withOpacity(sin(progress*pi) * 0.6))),
+          
+          // Huge chaotic lightning bolts
+          ...List.generate(5, (index) {
+             // Only show randomly during the animation
+             if ((progress * 100).toInt() % (index + 2) != 0) return const SizedBox();
+             
+             return Positioned(
+               left: _random.nextDouble() * MediaQuery.of(context).size.width - 100,
+               top: _random.nextDouble() * MediaQuery.of(context).size.height - 100,
+               child: Opacity(
+                 opacity: opacity.clamp(0.0, 1.0),
+                 child: Transform.rotate(
+                   angle: (_random.nextDouble() - 0.5) * pi,
+                   child: Transform.scale(
+                     scale: 5.0 + _random.nextDouble() * 10,
+                     child: const Icon(Icons.bolt, color: Colors.yellow, size: 100),
+                   ),
+                 ),
+               ),
+             );
+          })
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFire() {
+    double progress = _controller.value;
+    double opacity = progress > 0.7 ? (1.0 - progress) * 3.33 : 1.0;
+    
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          // Orange flash
+          Positioned.fill(child: Container(color: Colors.deepOrange.withOpacity(sin(progress * pi) * 0.8))),
+          
+          // Eruption from bottom
+          ...List.generate(30, (index) {
+            double easeProgress = Curves.easeOutCubic.transform(progress);
+            double x = 0.5 + (_random.nextDouble() - 0.5) * easeProgress * 2;
+            double y = 1.2 - easeProgress * (1.0 + _random.nextDouble());
+            double scale = (1.0 - progress) * 3 + _random.nextDouble() * 2;
+            
+            return Positioned(
+              left: x * MediaQuery.of(context).size.width,
+              top: y * MediaQuery.of(context).size.height,
+              child: Opacity(
+                opacity: opacity.clamp(0.0, 1.0),
+                child: Transform.scale(
+                  scale: scale,
+                  child: const Icon(Icons.local_fire_department, color: Colors.orangeAccent, size: 80),
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStandard() {
+    double progress = _controller.value;
+    Color mainColor = _standardParticles.isNotEmpty ? _standardParticles.first.color : Colors.white;
+    double bgOpacity = sin(progress * pi) * 0.5;
+
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Container(color: mainColor.withOpacity(bgOpacity.clamp(0.0, 1.0))),
+          ),
+          ..._standardParticles.map((p) {
+            double easeProgress = Curves.easeOutQuad.transform(progress);
+            double x = p.startX + (p.endX - p.startX) * easeProgress;
+            double y = p.startY + (p.endY - p.startY) * easeProgress;
+            double currentRotation = p.rotation + (p.rotationSpeed * progress);
+            double scale = sin(progress * pi) * 1.5 + 0.5; 
+            double opacity = progress > 0.8 ? (1.0 - progress) * 5 : 1.0;
+
+            return Positioned(
+              left: x * MediaQuery.of(context).size.width,
+              top: y * MediaQuery.of(context).size.height,
+              child: Opacity(
+                opacity: opacity.clamp(0.0, 1.0),
+                child: Transform.translate(
+                  offset: Offset(-p.size/2, -p.size/2),
+                  child: Transform.rotate(
+                    angle: currentRotation,
+                    child: Transform.scale(
+                      scale: scale,
+                      child: Icon(
+                         p.icon, 
+                         color: p.color, 
+                         size: p.size,
+                         shadows: [Shadow(blurRadius: 15.0, color: p.color.withOpacity(0.8), offset: const Offset(0, 0))]
                       ),
                     ),
                   ),
-                );
-              }).toList(),
-            ],
-          ),
-        );
-      },
+                ),
+              ),
+            );
+          }).toList(),
+        ],
+      ),
     );
   }
 }

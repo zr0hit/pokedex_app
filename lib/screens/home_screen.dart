@@ -19,7 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _searchQuery = '';
 
   final List<String> _types = [
-    'All', 'Normal', 'Fire', 'Water', 'Electric', 'Grass', 'Ice', 
+    'All', 'Legendary', 'Mythical', 'Normal', 'Fire', 'Water', 'Electric', 'Grass', 'Ice', 
     'Fighting', 'Poison', 'Ground', 'Flying', 'Psychic', 'Bug', 
     'Rock', 'Ghost', 'Dragon', 'Dark', 'Steel', 'Fairy'
   ];
