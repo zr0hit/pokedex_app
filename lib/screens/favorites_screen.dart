@@ -25,6 +25,8 @@ class FavoritesScreen extends StatelessWidget {
           }
           return GridView.builder(
             padding: const EdgeInsets.all(16),
+            cacheExtent: 2000,
+            physics: const BouncingScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
               childAspectRatio: 0.8,
