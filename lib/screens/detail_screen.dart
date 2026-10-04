@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/pokemon.dart';
 import '../providers/pokemon_provider.dart';
 import '../widgets/pokemon_text.dart';
+import '../widgets/dynamic_background.dart';
 
 class DetailScreen extends StatefulWidget {
   final PokemonDetail pokemonItem;
@@ -21,7 +22,6 @@ class _DetailScreenState extends State<DetailScreen> {
   void initState() {
     super.initState();
     _detail = widget.pokemonItem;
-    // Deterministic random so the same pokemon always has the same side
     _isImageOnLeft = _detail.id % 2 == 0;
   }
 
@@ -91,7 +91,7 @@ class _DetailScreenState extends State<DetailScreen> {
             child: Image.network(
               _detail.imageUrl,
               fit: BoxFit.contain,
-              width: double.infinity, // allow it to grow large
+              width: double.infinity,
               height: isDesktop ? double.infinity : 220,
               loadingBuilder: (context, child, loadingProgress) {
                 if (loadingProgress == null) return child;
@@ -219,20 +219,24 @@ class _DetailScreenState extends State<DetailScreen> {
   @override
   Widget build(BuildContext context) {
     String primaryType = _detail.types.isNotEmpty ? _detail.types.first : 'normal';
+    String secondaryType = _detail.types.length > 1 ? _detail.types[1] : primaryType;
     String bgUrl = _getBackgroundImage(primaryType);
+
+    Color c1 = _getTypeColor(primaryType);
+    Color c2 = _getTypeColor(secondaryType);
+    if (c1 == c2) {
+      c2 = c1.withAlpha(100); // Make it slightly different if single type
+    }
 
     return Scaffold(
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Image.network(
-              bgUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (context, err, stack) => Container(color: Colors.grey.shade800),
-            ),
-          ),
-          Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.5)), // Slightly darker overlay for contrast
+          // The new animated background
+          DynamicBackground(
+            pokemon: _detail,
+            bgUrl: bgUrl,
+            typeColor1: c1,
+            typeColor2: c2,
           ),
           
           SafeArea(
@@ -271,7 +275,6 @@ class _DetailScreenState extends State<DetailScreen> {
                   ),
                 ),
                 
-                // Responsive Layout
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
@@ -285,7 +288,6 @@ class _DetailScreenState extends State<DetailScreen> {
                               : [_buildDetailsSection(true), _buildImageSection(true)],
                         );
                       } else {
-                        // Mobile fallback (Always Image top, details bottom)
                         return Column(
                           children: [
                             _buildImageSection(false),
