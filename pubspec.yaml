@@ -1,4 +1,4 @@
-name: pokedex_assignment
+﻿name: pokedex_assignment
 description: A small Flutter app that implements the Pokédex UI using live data from the public PokéAPI.
 publish_to: 'none'
 version: 1.0.0+1
@@ -14,9 +14,15 @@ dependencies:
   google_fonts: ^9.0.0
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.13.1
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
