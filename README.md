@@ -7,10 +7,11 @@ This project was designed with premium glassmorphism aesthetics, dynamic element
 Here is the mobile application running beautifully in a native environment:
 
 <p align="center">
-  <img src="screenshots/home.jpg" width="22%" />
-  <img src="screenshots/legendary.jpg" width="22%" />
-  <img src="screenshots/search.jpg" width="22%" />
-  <img src="screenshots/favorites.jpg" width="22%" />
+  <img src="screenshots/home.jpg" width="19%" />
+  <img src="screenshots/legendary.jpg" width="19%" />
+  <img src="screenshots/search.jpg" width="19%" />
+  <img src="screenshots/details.jpg" width="19%" />
+  <img src="screenshots/favorites.jpg" width="19%" />
 </p>
 
 ## 📱 Find the Apps (Mobile vs Web)
