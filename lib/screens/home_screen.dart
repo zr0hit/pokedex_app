@@ -1,0 +1,185 @@
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/pokemon_provider.dart';
+import '../widgets/pokemon_card.dart';
+import 'favorites_screen.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  final List<String> _types = [
+    'All', 'Normal', 'Fire', 'Water', 'Electric', 'Grass', 'Ice', 
+    'Fighting', 'Poison', 'Ground', 'Flying', 'Psychic', 'Bug', 
+    'Rock', 'Ghost', 'Dragon', 'Dark', 'Steel', 'Fairy'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      context.read<PokemonProvider>().loadPokemonList();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildPokemonTitle() {
+    return Stack(
+      children: [
+        Text(
+          'Pokédex',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 3,
+            foreground: Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 5
+              ..color = Colors.blue.shade800,
+          ),
+        ),
+        Text(
+          'Pokédex',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 3,
+            color: Colors.yellowAccent.shade400,
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: _buildPokemonTitle(),
+        backgroundColor: Colors.red.shade600,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.favorite),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FavoritesScreen()),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search Pokemon by Name...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value.toLowerCase();
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 40,
+                  child: Consumer<PokemonProvider>(
+                    builder: (context, provider, child) {
+                      return ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _types.length,
+                        itemBuilder: (context, index) {
+                          final type = _types[index];
+                          final isSelected = provider.currentType == type;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: FilterChip(
+                              label: Text(type),
+                              selected: isSelected,
+                              selectedColor: Colors.red.shade100,
+                              onSelected: (selected) {
+                                provider.setTypeFilter(type);
+                              },
+                            ),
+                          );
+                        },
+                      );
+                    }
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Consumer<PokemonProvider>(
+              builder: (context, provider, child) {
+                final filteredList = provider.pokemonList.where((p) {
+                  return p.name.toLowerCase().contains(_searchQuery);
+                }).toList();
+
+                if (provider.pokemonList.isEmpty && provider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (provider.hasError && provider.pokemonList.isEmpty) {
+                  return Center(
+                    child: ElevatedButton(
+                      onPressed: () => provider.loadPokemonList(),
+                      child: const Text('Retry'),
+                    ),
+                  );
+                }
+
+                return GridView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.75,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  itemCount: filteredList.length + (provider.isLoading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == filteredList.length) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final pokemon = filteredList[index];
+                    return PokemonCard(pokemon: pokemon);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
