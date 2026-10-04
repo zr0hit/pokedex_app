@@ -15,11 +15,14 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
   late PokemonDetail _detail;
+  late bool _isImageOnLeft;
 
   @override
   void initState() {
     super.initState();
     _detail = widget.pokemonItem;
+    // Deterministic random so the same pokemon always has the same side
+    _isImageOnLeft = _detail.id % 2 == 0;
   }
 
   String _getBackgroundImage(String type) {
@@ -77,6 +80,142 @@ class _DetailScreenState extends State<DetailScreen> {
     }
   }
 
+  Widget _buildImageSection(bool isDesktop) {
+    return Expanded(
+      flex: 1,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Hero(
+            tag: 'pokemon-${_detail.id}',
+            child: Image.network(
+              _detail.imageUrl,
+              fit: BoxFit.contain,
+              width: double.infinity, // allow it to grow large
+              height: isDesktop ? double.infinity : 220,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return const CircularProgressIndicator(color: Colors.white);
+              },
+              errorBuilder: (context, error, stackTrace) => const Icon(Icons.error, color: Colors.white, size: 100),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailsSection(bool isDesktop) {
+    return Expanded(
+      flex: 1,
+      child: Container(
+        margin: EdgeInsets.all(isDesktop ? 32 : 16),
+        padding: EdgeInsets.all(isDesktop ? 40 : 24),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.92),
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 10),
+            )
+          ]
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                '#${_detail.id.toString().padLeft(3, '0')}',
+                style: TextStyle(fontSize: isDesktop ? 28 : 20, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 20),
+              
+              Wrap(
+                spacing: 16,
+                children: _detail.types.map((type) {
+                  return Chip(
+                    label: Text(
+                      type.toUpperCase(),
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: isDesktop ? 18 : 14),
+                    ),
+                    backgroundColor: _getTypeColor(type),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  );
+                }).toList(),
+              ),
+              SizedBox(height: isDesktop ? 40 : 30),
+              
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildInfoItem('Weight', '${(_detail.weight / 10).toStringAsFixed(1)} kg', isDesktop),
+                  Container(height: isDesktop ? 60 : 40, width: 2, color: Colors.grey.shade300),
+                  _buildInfoItem('Height', '${(_detail.height / 10).toStringAsFixed(1)} m', isDesktop),
+                ],
+              ),
+              SizedBox(height: isDesktop ? 40 : 30),
+              
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Base Stats', style: TextStyle(fontSize: isDesktop ? 26 : 22, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 20),
+              
+              ..._detail.stats.entries.map((e) => _buildStatRow(e.key, e.value, isDesktop)).toList(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoItem(String title, String value, bool isDesktop) {
+    return Column(
+      children: [
+        Text(value, style: TextStyle(fontSize: isDesktop ? 24 : 20, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Text(title, style: TextStyle(color: Colors.grey.shade600, fontSize: isDesktop ? 16 : 14)),
+      ],
+    );
+  }
+
+  Widget _buildStatRow(String statName, int statValue, bool isDesktop) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          SizedBox(
+            width: isDesktop ? 120 : 100,
+            child: Text(
+              statName.toUpperCase(),
+              style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w600, fontSize: isDesktop ? 16 : 14),
+            ),
+          ),
+          SizedBox(
+            width: isDesktop ? 50 : 40,
+            child: Text(
+              statValue.toString(),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: isDesktop ? 18 : 16),
+            ),
+          ),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                value: statValue / 150,
+                minHeight: isDesktop ? 14 : 10,
+                backgroundColor: Colors.grey.shade200,
+                color: statValue > 70 ? Colors.green : (statValue > 40 ? Colors.orange : Colors.red),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     String primaryType = _detail.types.isNotEmpty ? _detail.types.first : 'normal';
@@ -93,27 +232,27 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
           ),
           Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.4)),
+            child: Container(color: Colors.black.withOpacity(0.5)), // Slightly darker overlay for contrast
           ),
           
           SafeArea(
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white, size: 30),
+                        icon: const Icon(Icons.arrow_back, color: Colors.white, size: 36),
                         onPressed: () => Navigator.pop(context),
                       ),
                       PokemonText(
                         text: _detail.name.toUpperCase(),
                         type: primaryType,
-                        fontSize: 26,
-                        strokeWidth: 5,
-                        letterSpacing: 2,
+                        fontSize: 36,
+                        strokeWidth: 6,
+                        letterSpacing: 4,
                       ),
                       Consumer<PokemonProvider>(
                         builder: (context, provider, child) {
@@ -122,7 +261,7 @@ class _DetailScreenState extends State<DetailScreen> {
                             icon: Icon(
                               isFav ? Icons.favorite : Icons.favorite_border,
                               color: isFav ? Colors.redAccent : Colors.white,
-                              size: 30,
+                              size: 36,
                             ),
                             onPressed: () => provider.toggleFavorite(_detail.id),
                           );
@@ -132,133 +271,32 @@ class _DetailScreenState extends State<DetailScreen> {
                   ),
                 ),
                 
-                Hero(
-                  tag: 'pokemon-${_detail.id}',
-                  child: Image.network(
-                    _detail.imageUrl,
-                    height: 220,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return const SizedBox(
-                        height: 220, 
-                        child: Center(child: CircularProgressIndicator(color: Colors.white))
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.error, color: Colors.white, size: 100),
-                  ),
-                ),
-                
-                const SizedBox(height: 10),
-                
+                // Responsive Layout
                 Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(top: 10, left: 16, right: 16, bottom: 16),
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.92),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        )
-                      ]
-                    ),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            '#${_detail.id.toString().padLeft(3, '0')}',
-                            style: TextStyle(fontSize: 20, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 16),
-                          
-                          Wrap(
-                            spacing: 12,
-                            children: _detail.types.map((type) {
-                              return Chip(
-                                label: Text(
-                                  type.toUpperCase(),
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                ),
-                                backgroundColor: _getTypeColor(type),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              );
-                            }).toList(),
-                          ),
-                          const SizedBox(height: 30),
-                          
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              _buildInfoItem('Weight', '${(_detail.weight / 10).toStringAsFixed(1)} kg'),
-                              Container(height: 40, width: 1, color: Colors.grey.shade300),
-                              _buildInfoItem('Height', '${(_detail.height / 10).toStringAsFixed(1)} m'),
-                            ],
-                          ),
-                          const SizedBox(height: 30),
-                          
-                          const Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text('Base Stats', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                          ),
-                          const SizedBox(height: 16),
-                          
-                          ..._detail.stats.entries.map((e) => _buildStatRow(e.key, e.value)).toList(),
-                        ],
-                      ),
-                    ),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      bool isDesktop = constraints.maxWidth > 800;
+                      
+                      if (isDesktop) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: _isImageOnLeft
+                              ? [_buildImageSection(true), _buildDetailsSection(true)]
+                              : [_buildDetailsSection(true), _buildImageSection(true)],
+                        );
+                      } else {
+                        // Mobile fallback (Always Image top, details bottom)
+                        return Column(
+                          children: [
+                            _buildImageSection(false),
+                            _buildDetailsSection(false),
+                          ],
+                        );
+                      }
+                    },
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoItem(String title, String value) {
-    return Column(
-      children: [
-        Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 6),
-        Text(title, style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
-      ],
-    );
-  }
-
-  Widget _buildStatRow(String statName, int statValue) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              statName.toUpperCase(),
-              style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w600),
-            ),
-          ),
-          SizedBox(
-            width: 40,
-            child: Text(
-              statValue.toString(),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-          ),
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(
-                value: statValue / 150,
-                minHeight: 10,
-                backgroundColor: Colors.grey.shade200,
-                color: statValue > 70 ? Colors.green : (statValue > 40 ? Colors.orange : Colors.red),
-              ),
             ),
           ),
         ],
