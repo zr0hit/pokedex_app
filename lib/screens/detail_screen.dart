@@ -84,17 +84,17 @@ class _DetailScreenState extends State<DetailScreen> {
 
   Widget _buildImageSection(bool isDesktop) {
     return Expanded(
-      flex: 1,
+      flex: 3, 
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(isDesktop ? 24.0 : 16.0),
           child: Hero(
             tag: 'pokemon-${_detail.id}',
             child: Image.network(
               _detail.imageUrl,
               fit: BoxFit.contain,
               width: double.infinity,
-              height: isDesktop ? double.infinity : 220,
+              height: double.infinity, 
               loadingBuilder: (context, child, loadingProgress) {
                 if (loadingProgress == null) return child;
                 return const PokeballLoading(color: Colors.white, size: 60);
@@ -114,13 +114,14 @@ class _DetailScreenState extends State<DetailScreen> {
     Color c2 = _getTypeColor(secondaryType);
 
     return Expanded(
-      flex: 1,
+      flex: 4,
       child: AnimatedDetailsCard(
         pokemon: _detail,
         color1: c1,
         color2: c2,
         isDesktop: isDesktop,
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -128,23 +129,23 @@ class _DetailScreenState extends State<DetailScreen> {
                 '#${_detail.id.toString().padLeft(3, '0')}',
                 style: TextStyle(fontSize: isDesktop ? 28 : 20, color: Colors.white70, fontWeight: FontWeight.w600, letterSpacing: 2),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               
               Wrap(
-                spacing: 16,
+                spacing: 12,
                 children: _detail.types.map((type) {
                   return Chip(
                     label: Text(
                       type.toUpperCase(),
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: isDesktop ? 18 : 14),
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: isDesktop ? 16 : 14),
                     ),
                     backgroundColor: _getTypeColor(type),
                     side: BorderSide.none,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   );
                 }).toList(),
               ),
-              SizedBox(height: isDesktop ? 40 : 30),
+              SizedBox(height: isDesktop ? 30 : 20),
               
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -160,9 +161,12 @@ class _DetailScreenState extends State<DetailScreen> {
                 alignment: Alignment.centerLeft,
                 child: Text('Base Stats', style: TextStyle(fontSize: isDesktop ? 26 : 22, fontWeight: FontWeight.bold, color: Colors.white)),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               
               ..._detail.stats.entries.map((e) => _buildStatRow(e.key, e.value, isDesktop)).toList(),
+              
+              SizedBox(height: isDesktop ? 40 : 30),
+              _buildWeaknessSection(isDesktop),
             ],
           ),
         ),
@@ -181,19 +185,35 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   Widget _buildStatRow(String statName, int statValue, bool isDesktop) {
+    IconData statIcon;
+    Color iconColor;
+    String displayStatName = statName.toUpperCase();
+    
+    switch (statName.toLowerCase()) {
+      case 'hp': statIcon = Icons.favorite; iconColor = Colors.redAccent; break;
+      case 'attack': statIcon = Icons.sports_martial_arts; iconColor = Colors.orangeAccent; break;
+      case 'defense': statIcon = Icons.shield; iconColor = Colors.blueAccent; break;
+      case 'special-attack': statIcon = Icons.auto_awesome; iconColor = Colors.purpleAccent; displayStatName = 'SP. ATK'; break;
+      case 'special-defense': statIcon = Icons.security; iconColor = Colors.lightBlueAccent; displayStatName = 'SP. DEF'; break;
+      case 'speed': statIcon = Icons.directions_run; iconColor = Colors.greenAccent; break;
+      default: statIcon = Icons.star; iconColor = Colors.white; break;
+    }
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
+          Icon(statIcon, color: iconColor, size: isDesktop ? 24 : 20),
+          const SizedBox(width: 8),
           SizedBox(
-            width: isDesktop ? 120 : 100,
+            width: isDesktop ? 90 : 80,
             child: Text(
-              statName.toUpperCase(),
-              style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: isDesktop ? 16 : 14),
+              displayStatName,
+              style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: isDesktop ? 16 : 13),
             ),
           ),
           SizedBox(
-            width: isDesktop ? 50 : 40,
+            width: isDesktop ? 45 : 35,
             child: Text(
               statValue.toString(),
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: isDesktop ? 18 : 16, color: Colors.white),
@@ -205,13 +225,84 @@ class _DetailScreenState extends State<DetailScreen> {
               child: LinearProgressIndicator(
                 value: statValue / 150,
                 minHeight: isDesktop ? 14 : 10,
-                backgroundColor: Colors.white12, // Dark/glassy background for the bar
+                backgroundColor: Colors.white12, 
                 color: statValue > 70 ? Colors.greenAccent : (statValue > 40 ? Colors.orangeAccent : Colors.redAccent),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildWeaknessSection(bool isDesktop) {
+    String primaryType = _detail.types.isNotEmpty ? _detail.types.first.toLowerCase() : 'normal';
+    
+    List<String> weakAgainst = [];
+    List<String> strongAgainst = [];
+    
+    switch (primaryType) {
+      case 'fire': weakAgainst = ['water', 'ground', 'rock']; strongAgainst = ['grass', 'bug', 'ice', 'steel']; break;
+      case 'water': weakAgainst = ['electric', 'grass']; strongAgainst = ['fire', 'ground', 'rock']; break;
+      case 'grass': weakAgainst = ['fire', 'ice', 'poison', 'flying', 'bug']; strongAgainst = ['water', 'ground', 'rock']; break;
+      case 'electric': weakAgainst = ['ground']; strongAgainst = ['water', 'flying']; break;
+      case 'ice': weakAgainst = ['fire', 'fighting', 'rock', 'steel']; strongAgainst = ['grass', 'ground', 'flying', 'dragon']; break;
+      case 'fighting': weakAgainst = ['flying', 'psychic', 'fairy']; strongAgainst = ['normal', 'ice', 'rock', 'dark', 'steel']; break;
+      case 'poison': weakAgainst = ['ground', 'psychic']; strongAgainst = ['grass', 'fairy']; break;
+      case 'ground': weakAgainst = ['water', 'grass', 'ice']; strongAgainst = ['fire', 'electric', 'poison', 'rock', 'steel']; break;
+      case 'flying': weakAgainst = ['electric', 'ice', 'rock']; strongAgainst = ['grass', 'fighting', 'bug']; break;
+      case 'psychic': weakAgainst = ['bug', 'ghost', 'dark']; strongAgainst = ['fighting', 'poison']; break;
+      case 'bug': weakAgainst = ['fire', 'flying', 'rock']; strongAgainst = ['grass', 'psychic', 'dark']; break;
+      case 'rock': weakAgainst = ['water', 'grass', 'fighting', 'ground', 'steel']; strongAgainst = ['fire', 'ice', 'flying', 'bug']; break;
+      case 'ghost': weakAgainst = ['ghost', 'dark']; strongAgainst = ['psychic', 'ghost']; break;
+      case 'dragon': weakAgainst = ['ice', 'dragon', 'fairy']; strongAgainst = ['dragon']; break;
+      case 'dark': weakAgainst = ['fighting', 'bug', 'fairy']; strongAgainst = ['psychic', 'ghost']; break;
+      case 'steel': weakAgainst = ['fire', 'fighting', 'ground']; strongAgainst = ['ice', 'rock', 'fairy']; break;
+      case 'fairy': weakAgainst = ['poison', 'steel']; strongAgainst = ['fighting', 'dragon', 'dark']; break;
+      case 'normal': weakAgainst = ['fighting']; strongAgainst = []; break;
+      default: weakAgainst = ['fighting']; strongAgainst = []; break;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (strongAgainst.isNotEmpty) ...[
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Strong Against', style: TextStyle(fontSize: isDesktop ? 22 : 18, fontWeight: FontWeight.bold, color: Colors.greenAccent)),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Wrap(
+              spacing: 8, runSpacing: 8,
+              children: strongAgainst.map((t) => _buildTypeChip(t, isDesktop)).toList(),
+            ),
+          ),
+          SizedBox(height: isDesktop ? 24 : 16),
+        ],
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text('Weak Against', style: TextStyle(fontSize: isDesktop ? 22 : 18, fontWeight: FontWeight.bold, color: Colors.redAccent)),
+        ),
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Wrap(
+            spacing: 8, runSpacing: 8,
+            children: weakAgainst.map((t) => _buildTypeChip(t, isDesktop)).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTypeChip(String type, bool isDesktop) {
+    return Chip(
+      label: Text(type.toUpperCase(), style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: isDesktop ? 13 : 11)),
+      backgroundColor: _getTypeColor(type).withOpacity(0.8),
+      side: BorderSide(color: Colors.white.withOpacity(0.3)),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
     );
   }
 
@@ -250,13 +341,13 @@ class _DetailScreenState extends State<DetailScreen> {
                         onPressed: () => Navigator.pop(context),
                       ),
                       PokemonText(
-  text: _detail.name.toUpperCase(),
-  type: primaryType,
-  pokemonName: _detail.name,
-  fontSize: 36,
-  strokeWidth: 6,
-  letterSpacing: 4,
-),
+                        text: _detail.name.toUpperCase(),
+                        type: primaryType,
+                        pokemonName: _detail.name,
+                        fontSize: 32,
+                        strokeWidth: 5,
+                        letterSpacing: 2,
+                      ),
                       Consumer<PokemonProvider>(
                         builder: (context, provider, child) {
                           final isFav = provider.isFavorite(_detail.id);

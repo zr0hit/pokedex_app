@@ -29,7 +29,6 @@ class _AnimatedDetailsCardState extends State<AnimatedDetailsCard> with SingleTi
   @override
   void initState() {
     super.initState();
-    // 6-second sweeping animation loop
     _controller = AnimationController(vsync: this, duration: const Duration(seconds: 6))..repeat(reverse: true);
   }
 
@@ -41,9 +40,9 @@ class _AnimatedDetailsCardState extends State<AnimatedDetailsCard> with SingleTi
 
   @override
   Widget build(BuildContext context) {
-    // We lerp the colors with black to create a premium dark background that still vividly shows the Pokemon's element
-    Color darkColor1 = Color.lerp(widget.color1, Colors.black, 0.4)!.withOpacity(0.9);
-    Color darkColor2 = Color.lerp(widget.color2, Colors.black, 0.7)!.withOpacity(0.95);
+    // Increased transparency so background effects and animations show through beautifully
+    Color darkColor1 = Color.lerp(widget.color1, Colors.black, 0.5)!.withOpacity(0.5);
+    Color darkColor2 = Color.lerp(widget.color2, Colors.black, 0.8)!.withOpacity(0.6);
 
     return Container(
       margin: EdgeInsets.all(widget.isDesktop ? 32 : 16),
@@ -51,7 +50,7 @@ class _AnimatedDetailsCardState extends State<AnimatedDetailsCard> with SingleTi
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: widget.color1.withOpacity(0.3), // Glow effect based on Pokemon type!
+            color: widget.color1.withOpacity(0.3), 
             blurRadius: 30,
             spreadRadius: 5,
             offset: const Offset(0, 10),
@@ -61,11 +60,10 @@ class _AnimatedDetailsCardState extends State<AnimatedDetailsCard> with SingleTi
       child: ClipRRect(
         borderRadius: BorderRadius.circular(32),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15), // Glassmorphism base
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), 
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
-              // Create a swirling spotlight/aurora effect moving across the card
               double x = sin(_controller.value * pi);
               double y = cos(_controller.value * pi);
               
@@ -78,12 +76,12 @@ class _AnimatedDetailsCardState extends State<AnimatedDetailsCard> with SingleTi
                     colors: [
                       darkColor1,
                       darkColor2,
-                      Colors.black87,
+                      Colors.black87.withOpacity(0.4),
                     ],
                     stops: const [0.0, 0.5, 1.0],
                   ),
                   borderRadius: BorderRadius.circular(32),
-                  border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.5), // Glass edge
+                  border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.5), 
                 ),
                 child: widget.child,
               );
