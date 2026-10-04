@@ -250,12 +250,13 @@ class _DetailScreenState extends State<DetailScreen> {
                         onPressed: () => Navigator.pop(context),
                       ),
                       PokemonText(
-                        text: _detail.name.toUpperCase(),
-                        type: primaryType,
-                        fontSize: 36,
-                        strokeWidth: 6,
-                        letterSpacing: 4,
-                      ),
+  text: _detail.name.toUpperCase(),
+  type: primaryType,
+  pokemonName: _detail.name,
+  fontSize: 36,
+  strokeWidth: 6,
+  letterSpacing: 4,
+),
                       Consumer<PokemonProvider>(
                         builder: (context, provider, child) {
                           final isFav = provider.isFavorite(_detail.id);
