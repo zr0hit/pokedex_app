@@ -189,13 +189,21 @@ class _HomeScreenState extends State<HomeScreen> {
                           return Padding(
                             padding: const EdgeInsets.only(right: 8.0),
                             child: FilterChip(
-                              label: Text(type),
-                              selected: isSelected,
-                              selectedColor: Colors.red.shade100,
-                              onSelected: (selected) {
-                                provider.setTypeFilter(type);
-                              },
-                            ),
+  label: Text(type, style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+  selected: isSelected,
+  selectedColor: Colors.red.shade200,
+  checkmarkColor: Colors.red.shade900,
+  backgroundColor: Colors.grey.shade100,
+  elevation: isSelected ? 4 : 0,
+  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+  onSelected: (selected) {
+    if (selected) {
+      provider.setTypeFilter(type);
+    } else {
+      provider.setTypeFilter('All');
+    }
+  },
+),
                           );
                         },
                       );
@@ -226,8 +234,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
 
                 return GridView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(16),
+  controller: _scrollController,
+  cacheExtent: 2500,
+  physics: const BouncingScrollPhysics(),
+  padding: const EdgeInsets.all(16),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: crossAxisCount,
                     childAspectRatio: 0.8,
