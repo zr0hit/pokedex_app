@@ -4,6 +4,7 @@ import '../models/pokemon.dart';
 import '../providers/pokemon_provider.dart';
 import '../widgets/pokemon_text.dart';
 import '../widgets/dynamic_background.dart';
+import '../widgets/animated_details_card.dart';
 
 class DetailScreen extends StatefulWidget {
   final PokemonDetail pokemonItem;
@@ -106,29 +107,25 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   Widget _buildDetailsSection(bool isDesktop) {
+    String primaryType = _detail.types.isNotEmpty ? _detail.types.first : 'normal';
+    String secondaryType = _detail.types.length > 1 ? _detail.types[1] : primaryType;
+    Color c1 = _getTypeColor(primaryType);
+    Color c2 = _getTypeColor(secondaryType);
+
     return Expanded(
       flex: 1,
-      child: Container(
-        margin: EdgeInsets.all(isDesktop ? 32 : 16),
-        padding: EdgeInsets.all(isDesktop ? 40 : 24),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.92),
-          borderRadius: BorderRadius.circular(32),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 10),
-            )
-          ]
-        ),
+      child: AnimatedDetailsCard(
+        pokemon: _detail,
+        color1: c1,
+        color2: c2,
+        isDesktop: isDesktop,
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 '#${_detail.id.toString().padLeft(3, '0')}',
-                style: TextStyle(fontSize: isDesktop ? 28 : 20, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: isDesktop ? 28 : 20, color: Colors.white70, fontWeight: FontWeight.w600, letterSpacing: 2),
               ),
               const SizedBox(height: 20),
               
@@ -141,6 +138,7 @@ class _DetailScreenState extends State<DetailScreen> {
                       style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: isDesktop ? 18 : 14),
                     ),
                     backgroundColor: _getTypeColor(type),
+                    side: BorderSide.none,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   );
                 }).toList(),
@@ -151,7 +149,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildInfoItem('Weight', '${(_detail.weight / 10).toStringAsFixed(1)} kg', isDesktop),
-                  Container(height: isDesktop ? 60 : 40, width: 2, color: Colors.grey.shade300),
+                  Container(height: isDesktop ? 60 : 40, width: 2, color: Colors.white24),
                   _buildInfoItem('Height', '${(_detail.height / 10).toStringAsFixed(1)} m', isDesktop),
                 ],
               ),
@@ -159,7 +157,7 @@ class _DetailScreenState extends State<DetailScreen> {
               
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Base Stats', style: TextStyle(fontSize: isDesktop ? 26 : 22, fontWeight: FontWeight.bold)),
+                child: Text('Base Stats', style: TextStyle(fontSize: isDesktop ? 26 : 22, fontWeight: FontWeight.bold, color: Colors.white)),
               ),
               const SizedBox(height: 20),
               
@@ -174,9 +172,9 @@ class _DetailScreenState extends State<DetailScreen> {
   Widget _buildInfoItem(String title, String value, bool isDesktop) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: isDesktop ? 24 : 20, fontWeight: FontWeight.bold)),
+        Text(value, style: TextStyle(fontSize: isDesktop ? 24 : 20, fontWeight: FontWeight.bold, color: Colors.white)),
         const SizedBox(height: 8),
-        Text(title, style: TextStyle(color: Colors.grey.shade600, fontSize: isDesktop ? 16 : 14)),
+        Text(title, style: TextStyle(color: Colors.white60, fontSize: isDesktop ? 16 : 14)),
       ],
     );
   }
@@ -190,14 +188,14 @@ class _DetailScreenState extends State<DetailScreen> {
             width: isDesktop ? 120 : 100,
             child: Text(
               statName.toUpperCase(),
-              style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w600, fontSize: isDesktop ? 16 : 14),
+              style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: isDesktop ? 16 : 14),
             ),
           ),
           SizedBox(
             width: isDesktop ? 50 : 40,
             child: Text(
               statValue.toString(),
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: isDesktop ? 18 : 16),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: isDesktop ? 18 : 16, color: Colors.white),
             ),
           ),
           Expanded(
@@ -206,8 +204,8 @@ class _DetailScreenState extends State<DetailScreen> {
               child: LinearProgressIndicator(
                 value: statValue / 150,
                 minHeight: isDesktop ? 14 : 10,
-                backgroundColor: Colors.grey.shade200,
-                color: statValue > 70 ? Colors.green : (statValue > 40 ? Colors.orange : Colors.red),
+                backgroundColor: Colors.white12, // Dark/glassy background for the bar
+                color: statValue > 70 ? Colors.greenAccent : (statValue > 40 ? Colors.orangeAccent : Colors.redAccent),
               ),
             ),
           ),
@@ -225,13 +223,12 @@ class _DetailScreenState extends State<DetailScreen> {
     Color c1 = _getTypeColor(primaryType);
     Color c2 = _getTypeColor(secondaryType);
     if (c1 == c2) {
-      c2 = c1.withAlpha(100); // Make it slightly different if single type
+      c2 = c1.withAlpha(100);
     }
 
     return Scaffold(
       body: Stack(
         children: [
-          // The new animated background
           DynamicBackground(
             pokemon: _detail,
             bgUrl: bgUrl,
