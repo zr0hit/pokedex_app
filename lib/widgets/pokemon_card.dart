@@ -108,7 +108,7 @@ class PokemonCard extends StatelessWidget {
                               isFav ? Icons.favorite : Icons.favorite_border,
                               color: isFav ? Colors.redAccent : Colors.white70,
                             ),
-                            onPressed: () => provider.toggleFavorite(pokemon.id),
+                            onPressed: () => provider.toggleFavorite(pokemon),
                           );
                         },
                       ),

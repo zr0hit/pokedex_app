@@ -265,7 +265,7 @@ class _DetailScreenState extends State<DetailScreen> {
                               color: isFav ? Colors.redAccent : Colors.white,
                               size: 36,
                             ),
-                            onPressed: () => provider.toggleFavorite(_detail.id),
+                            onPressed: () => provider.toggleFavorite(_detail),
                           );
                         },
                       ),

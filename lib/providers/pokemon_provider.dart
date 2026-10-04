@@ -15,6 +15,8 @@ class PokemonProvider with ChangeNotifier {
   final int _limit = 20;
   
   List<String> _favorites = [];
+  List<PokemonDetail> _favoriteDetails = [];
+  
   List<String> _allPokemonNames = [];
 
   String _currentType = 'All';
@@ -30,12 +32,26 @@ class PokemonProvider with ChangeNotifier {
   }
 
   List<PokemonDetail> get pokemonList => _pokemonList;
+  List<PokemonDetail> get favoriteDetails => _favoriteDetails;
   bool get isLoading => _isLoading;
   bool get hasError => _hasError;
   List<String> get favorites => _favorites;
 
-  void _loadFavorites() {
+  Future<void> _loadFavorites() async {
     _favorites = _prefs.getStringList('favorites') ?? [];
+    notifyListeners();
+    
+    // Background load the full details of saved favorites so they are always available
+    for (String idStr in _favorites) {
+      try {
+        final detail = await _apiService.getPokemonDetail(idStr);
+        if (!_favoriteDetails.any((p) => p.id == detail.id)) {
+          _favoriteDetails.add(detail);
+        }
+      } catch (e) {
+        // Silently ignore if a favorite fails to load
+      }
+    }
     notifyListeners();
   }
 
@@ -112,12 +128,16 @@ class PokemonProvider with ChangeNotifier {
     }
   }
 
-  void toggleFavorite(int id) {
-    final idStr = id.toString();
+  void toggleFavorite(PokemonDetail pokemon) {
+    final idStr = pokemon.id.toString();
     if (_favorites.contains(idStr)) {
       _favorites.remove(idStr);
+      _favoriteDetails.removeWhere((p) => p.id == pokemon.id);
     } else {
       _favorites.add(idStr);
+      if (!_favoriteDetails.any((p) => p.id == pokemon.id)) {
+        _favoriteDetails.add(pokemon);
+      }
     }
     _prefs.setStringList('favorites', _favorites);
     notifyListeners();
@@ -125,9 +145,5 @@ class PokemonProvider with ChangeNotifier {
 
   bool isFavorite(int id) {
     return _favorites.contains(id.toString());
-  }
-
-  List<PokemonDetail> get favoritePokemonList {
-    return _pokemonList.where((p) => isFavorite(p.id)).toList();
   }
 }
