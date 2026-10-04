@@ -31,6 +31,16 @@ class ApiService {
     }
   }
 
+  Future<List<String>> getAllPokemonNames() async {
+    final response = await http.get(Uri.parse('$baseUrl/pokemon?limit=10000'));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final List results = data['results'];
+      return results.map((p) => p['name'] as String).toList();
+    }
+    return [];
+  }
+
   Future<PokemonDetail> getPokemonDetail(String idOrName) async {
     final response = await http.get(Uri.parse('$baseUrl/pokemon/$idOrName'));
     if (response.statusCode == 200) {

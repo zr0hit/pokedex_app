@@ -14,13 +14,17 @@ class PokemonProvider with ChangeNotifier {
   final int _limit = 20;
   
   List<String> _favorites = [];
+  List<String> _allPokemonNames = [];
 
   String _currentType = 'All';
   String get currentType => _currentType;
+  List<String> get allPokemonNames => _allPokemonNames;
+
   List<String> _filteredTypeNames = [];
 
   PokemonProvider(this._prefs) {
     _loadFavorites();
+    _loadAllNames();
     loadPokemonList();
   }
 
@@ -31,6 +35,11 @@ class PokemonProvider with ChangeNotifier {
 
   void _loadFavorites() {
     _favorites = _prefs.getStringList('favorites') ?? [];
+    notifyListeners();
+  }
+
+  Future<void> _loadAllNames() async {
+    _allPokemonNames = await _apiService.getAllPokemonNames();
     notifyListeners();
   }
 

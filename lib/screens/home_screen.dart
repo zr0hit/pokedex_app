@@ -2,6 +2,8 @@
 import 'package:provider/provider.dart';
 import '../providers/pokemon_provider.dart';
 import '../widgets/pokemon_card.dart';
+import '../services/api_service.dart';
+import 'detail_screen.dart';
 import 'favorites_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -13,7 +15,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
-  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
   final List<String> _types = [
@@ -37,7 +38,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -94,17 +94,81 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search Pokemon by Name...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value.toLowerCase();
-                    });
+                Autocomplete<String>(
+                  optionsBuilder: (TextEditingValue textEditingValue) {
+                    if (textEditingValue.text == '') {
+                      return const Iterable<String>.empty();
+                    }
+                    return context.read<PokemonProvider>().allPokemonNames.where((String option) {
+                      return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                    }).take(5); // Only show top 5 suggestions
+                  },
+                  onSelected: (String selection) async {
+                    showDialog(
+                      context: context, 
+                      barrierDismissible: false,
+                      builder: (_) => const Center(child: CircularProgressIndicator()),
+                    );
+                    try {
+                      final detail = await ApiService().getPokemonDetail(selection);
+                      if (context.mounted) {
+                        Navigator.pop(context); // close dialog
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => DetailScreen(pokemonItem: detail)));
+                      }
+                    } catch (e) {
+                      if (context.mounted) Navigator.pop(context);
+                    }
+                  },
+                  optionsViewBuilder: (context, onSelected, options) {
+                    return Align(
+                      alignment: Alignment.topLeft,
+                      child: Material(
+                        elevation: 4.0,
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          width: MediaQuery.of(context).size.width - 32,
+                          constraints: const BoxConstraints(maxHeight: 250),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: ListView.builder(
+                            padding: EdgeInsets.zero,
+                            shrinkWrap: true,
+                            itemCount: options.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              final String option = options.elementAt(index);
+                              return ListTile(
+                                leading: const Icon(Icons.search, color: Colors.grey),
+                                title: Text(option.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                onTap: () => onSelected(option),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                    return TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      decoration: InputDecoration(
+                        hintText: 'Search any Pokémon globally...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value.toLowerCase();
+                        });
+                      },
+                    );
                   },
                 ),
                 const SizedBox(height: 12),
