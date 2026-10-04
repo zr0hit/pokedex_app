@@ -5,6 +5,7 @@ import '../providers/pokemon_provider.dart';
 import '../widgets/pokemon_text.dart';
 import '../widgets/dynamic_background.dart';
 import '../widgets/animated_details_card.dart';
+import '../widgets/pokeball_loading.dart';
 
 class DetailScreen extends StatefulWidget {
   final PokemonDetail pokemonItem;
@@ -96,7 +97,7 @@ class _DetailScreenState extends State<DetailScreen> {
               height: isDesktop ? double.infinity : 220,
               loadingBuilder: (context, child, loadingProgress) {
                 if (loadingProgress == null) return child;
-                return const CircularProgressIndicator(color: Colors.white);
+                return const PokeballLoading(color: Colors.white, size: 60);
               },
               errorBuilder: (context, error, stackTrace) => const Icon(Icons.error, color: Colors.white, size: 100),
             ),

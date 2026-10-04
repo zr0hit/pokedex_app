@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/pokemon_provider.dart';
 import '../widgets/pokemon_card.dart';
 import '../services/api_service.dart';
+import '../widgets/pokeball_loading.dart';
 import 'detail_screen.dart';
 import 'favorites_screen.dart';
 
@@ -110,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     showDialog(
                       context: context, 
                       barrierDismissible: false,
-                      builder: (_) => const Center(child: CircularProgressIndicator()),
+                      builder: (_) => const Center(child: PokeballLoading()),
                     );
                     try {
                       final detail = await ApiService().getPokemonDetail(selection);
@@ -212,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 }).toList();
 
                 if (provider.pokemonList.isEmpty && provider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: PokeballLoading());
                 }
 
                 if (provider.hasError && provider.pokemonList.isEmpty) {
@@ -236,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemCount: filteredList.length + (provider.isLoading ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == filteredList.length) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(child: PokeballLoading());
                     }
                     final pokemon = filteredList[index];
                     return PokemonCard(pokemon: pokemon);

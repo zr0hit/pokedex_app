@@ -5,6 +5,7 @@ import '../providers/pokemon_provider.dart';
 import '../screens/detail_screen.dart';
 import 'type_animation.dart';
 import 'pokemon_text.dart';
+import 'pokeball_loading.dart';
 
 class PokemonCard extends StatelessWidget {
   final PokemonDetail pokemon;
@@ -124,7 +125,7 @@ class PokemonCard extends StatelessWidget {
                           fit: BoxFit.contain,
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
-                            return const Center(child: CircularProgressIndicator(color: Colors.white));
+                            return const Center(child: PokeballLoading(color: Colors.white, size: 30));
                           },
                           errorBuilder: (context, error, stackTrace) => const Icon(Icons.error, color: Colors.white),
                         ),
