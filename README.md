@@ -3,6 +3,16 @@
 A stunning, highly performant, and fully cross-platform Pokédex application built with **Flutter**.
 This project was designed with premium glassmorphism aesthetics, dynamic elemental animations, and fluid responsive layouts that flawlessly adapt to both Mobile Phones and Desktop Web Browsers using a **single unified codebase**.
 
+## 📸 Mobile App Previews
+Here is the mobile application running beautifully in a native environment:
+
+<p align="center">
+  <img src="screenshots/home.jpg" width="22%" />
+  <img src="screenshots/legendary.jpg" width="22%" />
+  <img src="screenshots/search.jpg" width="22%" />
+  <img src="screenshots/favorites.jpg" width="22%" />
+</p>
+
 ## 📱 Find the Apps (Mobile vs Web)
 Because this app is built with Flutter, the entire application is powered by a **single shared codebase** located in the lib/ directory. However, you can easily build or explore the specific platforms:
 
