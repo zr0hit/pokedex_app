@@ -71,6 +71,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    int crossAxisCount = (MediaQuery.of(context).size.width / 220).floor();
+    if (crossAxisCount < 2) crossAxisCount = 2;
+
     return Scaffold(
       appBar: AppBar(
         title: _buildPokemonTitle(),
@@ -101,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
                     return context.read<PokemonProvider>().allPokemonNames.where((String option) {
                       return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
-                    }).take(5); // Only show top 5 suggestions
+                    }).take(5);
                   },
                   onSelected: (String selection) async {
                     showDialog(
@@ -112,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     try {
                       final detail = await ApiService().getPokemonDetail(selection);
                       if (context.mounted) {
-                        Navigator.pop(context); // close dialog
+                        Navigator.pop(context);
                         Navigator.push(context, MaterialPageRoute(builder: (_) => DetailScreen(pokemonItem: detail)));
                       }
                     } catch (e) {
@@ -224,9 +227,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 return GridView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.75,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    childAspectRatio: 0.8,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                   ),
